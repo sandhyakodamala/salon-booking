@@ -3,26 +3,34 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import secrets
+import time
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-# Database Configuration
+# Database Configuration with retry logic
 database_url = os.environ.get('DATABASE_URL', 'postgresql://salon_user:salon_password@db:5432/salon_db')
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 10,
+    'pool_recycle': 300,
+    'pool_pre_ping': True,
+}
 
 db = SQLAlchemy(app)
 
 # ==================== DATABASE MODELS ====================
 
 class User(db.Model):
+    __tablename__ = 'users'  # ← Explicit table name
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.String(50), default=datetime.now().isoformat())
 
 class Appointment(db.Model):
+    __tablename__ = 'appointments'  # ← Explicit table name
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     service = db.Column(db.String(100), nullable=False)
@@ -31,9 +39,31 @@ class Appointment(db.Model):
     booked_at = db.Column(db.String(50), default=datetime.now().isoformat())
     status = db.Column(db.String(20), default='active')
 
-# Create tables
-with app.app_context():
-    db.create_all()
+# ==================== CREATE TABLES WITH RETRY ====================
+
+def init_db():
+    """Initialize database with retry logic"""
+    max_retries = 30
+    retry_delay = 2
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"Attempting to connect to database (attempt {attempt + 1}/{max_retries})...")
+            with app.app_context():
+                db.create_all()
+                print("✅ Database tables created successfully!")
+                return True
+        except Exception as e:
+            print(f"❌ Database connection failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("❌ Failed to connect to database after all retries")
+                return False
+
+# Initialize database
+init_db()
 
 # ==================== HTML TEMPLATES ====================
 
