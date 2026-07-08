@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Service 1: Web Application (Your custom image)
   web:
-    image: salon-web:latest
+    image: sandhyakodamala/salonbooking:app_img
     build:
       context: ./app
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
 
   # Service 2: Database (Your custom image)
   db:
-    image: salon-db:latest
+    image: sandhyakodamala/salonbooking:db_img
     build:
       context: ./db
       dockerfile: Dockerfile
@@ -48,7 +48,7 @@ services:
 
   # Service 3: Adminer (Your custom image)
   adminer:
-    image: salon-adminer:latest
+    image: sandhyakodamala/salonbooking:adminer_img
     build:
       context: ./adminer
       dockerfile: Dockerfile
