@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Service 1: Web Application (Your custom image)
   web:
     image: sandhyakodamala/salonbooking:app_img
     ports:
@@ -11,13 +10,12 @@ services:
     depends_on:
       - db
     deploy:
-      replicas: 2
+      replicas: 1
       restart_policy:
         condition: on-failure
     networks:
       - salon-network
 
-  # Service 2: Database (Your custom image)
   db:
     image: sandhyakodamala/salonbooking:db_img
     environment:
@@ -36,11 +34,10 @@ services:
       - salon-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U salon_user -d salon_db"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # Service 3: Adminer (Your custom image)
   adminer:
     image: sandhyakodamala/salonbooking:adminer_img
     ports:
@@ -62,3 +59,4 @@ volumes:
 networks:
   salon-network:
     driver: overlay
+    attachable: true   # ← Important for service discovery
