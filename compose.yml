@@ -32,11 +32,6 @@ services:
         condition: on-failure
     networks:
       - salon-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U salon_user -d salon_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   adminer:
     image: sandhyakodamala/salonbooking:adminer_img
