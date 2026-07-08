@@ -4,9 +4,6 @@ services:
   # Service 1: Web Application (Your custom image)
   web:
     image: sandhyakodamala/salonbooking:app_img
-    build:
-      context: ./app
-      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     environment:
@@ -23,9 +20,6 @@ services:
   # Service 2: Database (Your custom image)
   db:
     image: sandhyakodamala/salonbooking:db_img
-    build:
-      context: ./db
-      dockerfile: Dockerfile
     environment:
       - POSTGRES_DB=salon_db
       - POSTGRES_USER=salon_user
@@ -49,9 +43,6 @@ services:
   # Service 3: Adminer (Your custom image)
   adminer:
     image: sandhyakodamala/salonbooking:adminer_img
-    build:
-      context: ./adminer
-      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
