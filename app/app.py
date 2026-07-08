@@ -8,7 +8,7 @@ import time
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-# Database Configuration with retry logic
+# Database Configuration
 database_url = os.environ.get('DATABASE_URL', 'postgresql://salon_user:salon_password@db:5432/salon_db')
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,14 +23,14 @@ db = SQLAlchemy(app)
 # ==================== DATABASE MODELS ====================
 
 class User(db.Model):
-    __tablename__ = 'users'  # ← Explicit table name
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.String(50), default=datetime.now().isoformat())
 
 class Appointment(db.Model):
-    __tablename__ = 'appointments'  # ← Explicit table name
+    __tablename__ = 'appointments'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     service = db.Column(db.String(100), nullable=False)
@@ -39,10 +39,9 @@ class Appointment(db.Model):
     booked_at = db.Column(db.String(50), default=datetime.now().isoformat())
     status = db.Column(db.String(20), default='active')
 
-# ==================== CREATE TABLES WITH RETRY ====================
+# ==================== CREATE TABLES ====================
 
 def init_db():
-    """Initialize database with retry logic"""
     max_retries = 30
     retry_delay = 2
     
@@ -62,82 +61,248 @@ def init_db():
                 print("❌ Failed to connect to database after all retries")
                 return False
 
-# Initialize database
 init_db()
 
 # ==================== HTML TEMPLATES ====================
 
+# LOGIN PAGE - Modern & Attractive
 LOGIN_PAGE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glamour Salon - Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            padding: 20px;
         }
+        
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            animation: slideUp 0.6s ease-out;
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        h1 { color: #2c3e50; text-align: center; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #34495e; font-weight: 600; }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            font-size: 18px;
+        }
+        
         input {
             width: 100%;
-            padding: 12px;
+            padding: 14px 14px 14px 48px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
         }
-        input:focus { outline: none; border-color: #667eea; }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .btn:hover { transform: translateY(-2px); }
-        .link { text-align: center; margin-top: 20px; color: #7f8c8d; }
-        .link a { color: #667eea; text-decoration: none; font-weight: 600; }
-        .flash {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
-        .flash-success { background: #d4edda; color: #155724; }
-        .flash-error { background: #f8d7da; color: #721c24; }
-        .services-info {
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+        }
+        
+        .link {
             text-align: center;
             margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .flash {
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .services-info {
+            text-align: center;
+            margin-top: 25px;
             padding: 15px;
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 12px;
             color: #6c757d;
+            line-height: 1.8;
+            border: 1px solid #e9ecef;
+        }
+        
+        .services-info span {
+            display: inline-block;
+            margin: 0 4px;
+        }
+        
+        .footer-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 11px;
+            color: #adb5bd;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💇 Glamour Salon</h1>
+        <div class="logo">
+            <span class="logo-icon">💇</span>
+        </div>
+        <h1>Glamour Salon</h1>
         <p class="subtitle">Book your appointment today!</p>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -151,13 +316,19 @@ LOGIN_PAGE = '''
         <form method="POST">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" placeholder="Enter username" required>
+                <div class="input-group">
+                    <span class="icon">👤</span>
+                    <input type="text" name="username" placeholder="Enter your username" required>
+                </div>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Enter password" required>
+                <div class="input-group">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="password" placeholder="Enter your password" required>
+                </div>
             </div>
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn">Sign In</button>
         </form>
         
         <div class="link">
@@ -165,77 +336,207 @@ LOGIN_PAGE = '''
         </div>
         
         <div class="services-info">
-            ✂️ Haircut • 🎨 Hair Coloring • 💅 Manicure • 🦶 Pedicure • 
-            🧖 Facial • 💆 Massage • 💄 Makeup • 🪒 Waxing
+            ✂️ Haircut &nbsp;•&nbsp; 🎨 Hair Coloring &nbsp;•&nbsp; 💅 Manicure &nbsp;•&nbsp; 🦶 Pedicure &nbsp;•&nbsp;
+            🧖 Facial &nbsp;•&nbsp; 💆 Massage &nbsp;•&nbsp; 💄 Makeup &nbsp;•&nbsp; 🪒 Waxing
         </div>
+        <div class="footer-text">✨ Your beauty, our priority ✨</div>
     </div>
 </body>
 </html>
 '''
 
+# SIGNUP PAGE - Modern & Attractive
 SIGNUP_PAGE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glamour Salon - Sign Up</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background-attachment: fixed;
+            padding: 20px;
         }
+        
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            animation: slideUp 0.6s ease-out;
         }
-        h1 { color: #2c3e50; text-align: center; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #34495e; font-weight: 600; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            font-size: 18px;
+        }
+        
         input {
             width: 100%;
-            padding: 12px;
+            padding: 14px 14px 14px 48px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
         }
-        input:focus { outline: none; border-color: #667eea; }
+        
+        input:focus {
+            outline: none;
+            border-color: #f5576c;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(245, 87, 108, 0.1);
+        }
+        
         .btn {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 14px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .btn:hover { transform: translateY(-2px); }
-        .link { text-align: center; margin-top: 20px; color: #7f8c8d; }
-        .link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+        }
+        
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .link a {
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .link a:hover {
+            text-decoration: underline;
+        }
+        
         .flash {
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             margin-bottom: 20px;
             text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
         }
-        .flash-success { background: #d4edda; color: #155724; }
-        .flash-error { background: #f8d7da; color: #721c24; }
-        .requirements { font-size: 12px; color: #6c757d; margin-top: 5px; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .requirements {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            padding-left: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✍️ Create Account</h1>
+        <span class="logo-icon">✍️</span>
+        <h1>Create Account</h1>
         <p class="subtitle">Join Glamour Salon family!</p>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -249,112 +550,336 @@ SIGNUP_PAGE = '''
         <form method="POST">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" placeholder="Choose username" required>
+                <div class="input-group">
+                    <span class="icon">👤</span>
+                    <input type="text" name="username" placeholder="Choose a username" required>
+                </div>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Create password" required>
-                <div class="requirements">Password must be at least 4 characters</div>
+                <div class="input-group">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="password" placeholder="Create a password" required>
+                </div>
+                <div class="requirements">🔑 Password must be at least 4 characters</div>
             </div>
             <div class="form-group">
                 <label>Confirm Password</label>
-                <input type="password" name="confirm" placeholder="Confirm password" required>
+                <div class="input-group">
+                    <span class="icon">✅</span>
+                    <input type="password" name="confirm" placeholder="Confirm your password" required>
+                </div>
             </div>
-            <button type="submit" class="btn">Sign Up</button>
+            <button type="submit" class="btn">Create Account</button>
         </form>
         
         <div class="link">
-            Already have an account? <a href="{{ url_for('login') }}">Login</a>
+            Already have an account? <a href="{{ url_for('login') }}">Sign In</a>
         </div>
     </div>
 </body>
 </html>
 '''
 
+# DASHBOARD PAGE - Modern & Attractive
 DASHBOARD_PAGE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glamour Salon - Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; }
-        .header {
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        
+        .navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px 40px;
+            padding: 18px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        
+        .navbar-brand span {
+            font-size: 28px;
+        }
+        
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .user-greeting {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
         .btn {
-            padding: 8px 20px;
+            padding: 10px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
         }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-success:hover { background: #229954; }
-        .btn-danger:hover { background: #c0392b; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .actions { display: flex; gap: 15px; margin-bottom: 30px; }
+        
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 14px 32px;
+            font-size: 15px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+        
         .card {
             background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid #e9ecef;
         }
-        .card h2 { color: #2c3e50; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-header h2 {
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        
+        .card-header .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
         th {
             background: #f8f9fa;
-            padding: 12px;
+            padding: 14px 16px;
             text-align: left;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 13px;
             border-bottom: 2px solid #e0e0e0;
         }
+        
         td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e9ecef;
+            color: #2c3e50;
+            font-size: 14px;
         }
-        .badge {
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
         }
-        .badge-active { background: #d4edda; color: #155724; }
-        .badge-cancelled { background: #f8d7da; color: #721c24; }
-        .no-data { text-align: center; padding: 40px; color: #7f8c8d; }
-        .flash {
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
         }
-        .flash-success { background: #d4edda; color: #155724; }
-        .flash-error { background: #f8d7da; color: #721c24; }
-        .footer { text-align: center; margin-top: 40px; padding: 20px; color: #7f8c8d; }
-        .user { font-size: 14px; opacity: 0.9; }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 6px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 50px 20px;
+            color: #7f8c8d;
+        }
+        
+        .no-data .icon {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 15px;
+        }
+        
+        .no-data p {
+            font-size: 16px;
+        }
+        
+        .flash {
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideDown 0.4s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #adb5bd;
+            font-size: 14px;
+        }
+        
         @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 10px; text-align: center; }
-            .actions { flex-direction: column; }
-            .actions .btn { width: 100%; text-align: center; }
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px 20px;
+                text-align: center;
+            }
+            
+            .navbar-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .actions .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            table {
+                font-size: 13px;
+            }
+            
+            th, td {
+                padding: 10px 12px;
+            }
+            
+            .card {
+                padding: 20px;
+                overflow-x: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>💇 Glamour Salon</h1>
-        <div>
-            <span class="user">👋 Welcome, {{ username }}!</span>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <span>💇</span> Glamour Salon
         </div>
-    </div>
+        <div class="navbar-actions">
+            <span class="user-greeting">👋 Welcome, {{ username }}!</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">🚪 Logout</a>
+        </div>
+    </nav>
     
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -366,11 +891,14 @@ DASHBOARD_PAGE = '''
         {% endwith %}
         
         <div class="actions">
-            <a href="{{ url_for('book') }}" class="btn btn-success">📅 Book New Appointment</a>
+            <a href="{{ url_for('book') }}" class="btn btn-primary">📅 Book New Appointment</a>
         </div>
         
         <div class="card">
-            <h2>📋 Your Appointments</h2>
+            <div class="card-header">
+                <h2>📋 Your Appointments</h2>
+                <span class="badge">{{ appointments|length }} total</span>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -385,15 +913,26 @@ DASHBOARD_PAGE = '''
                     {% if appointments %}
                         {% for app in appointments %}
                         <tr>
-                            <td>{{ app.service }}</td>
-                            <td>{{ app.date }}</td>
-                            <td>{{ app.time }}</td>
-                            <td><span class="badge badge-{{ app.status }}">{{ app.status }}</span></td>
+                            <td>
+                                {% if app.service == 'Haircut' %}✂️
+                                {% elif app.service == 'Hair Coloring' %}🎨
+                                {% elif app.service == 'Manicure' %}💅
+                                {% elif app.service == 'Pedicure' %}🦶
+                                {% elif app.service == 'Facial' %}🧖
+                                {% elif app.service == 'Massage' %}💆
+                                {% elif app.service == 'Makeup' %}💄
+                                {% elif app.service == 'Waxing' %}🪒
+                                {% endif %}
+                                {{ app.service }}
+                            </td>
+                            <td>📅 {{ app.date }}</td>
+                            <td>🕐 {{ app.time }}</td>
+                            <td><span class="status-badge status-{{ app.status }}">{{ app.status|title }}</span></td>
                             <td>
                                 {% if app.status == 'active' %}
-                                    <a href="{{ url_for('cancel', id=app.id) }}" class="btn btn-danger" style="padding: 5px 12px; font-size: 12px;" onclick="return confirm('Cancel this appointment?')">Cancel</a>
+                                    <a href="{{ url_for('cancel', id=app.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this appointment?')">Cancel</a>
                                 {% else %}
-                                    <span style="color: #7f8c8d; font-size: 12px;">Cancelled</span>
+                                    <span style="color: #7f8c8d; font-size: 13px;">❌ Cancelled</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -402,8 +941,9 @@ DASHBOARD_PAGE = '''
                         <tr>
                             <td colspan="5">
                                 <div class="no-data">
-                                    No appointments booked yet.<br>
-                                    <a href="{{ url_for('book') }}" class="btn btn-success" style="margin-top: 10px;">Book your first appointment</a>
+                                    <span class="icon">📭</span>
+                                    <p>No appointments booked yet.</p>
+                                    <a href="{{ url_for('book') }}" class="btn btn-primary" style="margin-top: 15px; display: inline-block;">Book your first appointment</a>
                                 </div>
                             </td>
                         </tr>
@@ -413,81 +953,224 @@ DASHBOARD_PAGE = '''
         </div>
         
         <div class="footer">
-            <p>💇 Glamour Salon - Your beauty, our priority</p>
+            💇 Glamour Salon — Your beauty, our priority ✨
         </div>
     </div>
 </body>
 </html>
 '''
 
+# BOOKING PAGE - Modern & Attractive
 BOOK_PAGE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glamour Salon - Book Appointment</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            background-attachment: fixed;
             padding: 20px;
         }
+        
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             width: 100%;
             max-width: 500px;
+            animation: slideUp 0.6s ease-out;
         }
-        h1 { color: #2c3e50; text-align: center; }
-        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #34495e; font-weight: 600; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo-icon {
+            font-size: 48px;
+            display: block;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 22px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            font-size: 18px;
+            z-index: 1;
+        }
+        
         select, input {
             width: 100%;
-            padding: 12px;
+            padding: 14px 14px 14px 48px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
         }
-        select:focus, input:focus { outline: none; border-color: #667eea; }
+        
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2395a5a6' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 5px;
         }
-        .btn:hover { transform: translateY(-2px); }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+        
         .btn-secondary {
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             margin-top: 10px;
         }
-        .link { text-align: center; margin-top: 20px; color: #7f8c8d; }
-        .link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+        }
+        
+        .link {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .link a:hover {
+            text-decoration: underline;
+        }
+        
         .flash {
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             margin-bottom: 20px;
             text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
         }
-        .flash-success { background: #d4edda; color: #155724; }
-        .flash-error { background: #f8d7da; color: #721c24; }
-        .date-hint { font-size: 12px; color: #6c757d; margin-top: 5px; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .date-hint {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            padding-left: 5px;
+        }
+        
+        .service-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📅 Book Appointment</h1>
+        <span class="logo-icon">📅</span>
+        <h1>Book Appointment</h1>
         <p class="subtitle">Choose your service and schedule</p>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -500,29 +1183,38 @@ BOOK_PAGE = '''
         
         <form method="POST">
             <div class="form-group">
-                <label>Service</label>
-                <select name="service" required>
-                    <option value="Haircut">✂️ Haircut</option>
-                    <option value="Hair Coloring">🎨 Hair Coloring</option>
-                    <option value="Manicure">💅 Manicure</option>
-                    <option value="Pedicure">🦶 Pedicure</option>
-                    <option value="Facial">🧖 Facial</option>
-                    <option value="Massage">💆 Massage</option>
-                    <option value="Makeup">💄 Makeup</option>
-                    <option value="Waxing">🪒 Waxing</option>
-                </select>
+                <label>💇 Service</label>
+                <div class="input-group">
+                    <span class="icon">✂️</span>
+                    <select name="service" required>
+                        <option value="Haircut">✂️ Haircut</option>
+                        <option value="Hair Coloring">🎨 Hair Coloring</option>
+                        <option value="Manicure">💅 Manicure</option>
+                        <option value="Pedicure">🦶 Pedicure</option>
+                        <option value="Facial">🧖 Facial</option>
+                        <option value="Massage">💆 Massage</option>
+                        <option value="Makeup">💄 Makeup</option>
+                        <option value="Waxing">🪒 Waxing</option>
+                    </select>
+                </div>
             </div>
             
             <div class="form-group">
-                <label>Date</label>
-                <input type="text" name="date" value="{{ today }}" placeholder="YYYY-MM-DD" required>
-                <div class="date-hint">Format: YYYY-MM-DD (e.g., 2026-07-09)</div>
+                <label>📆 Date</label>
+                <div class="input-group">
+                    <span class="icon">📅</span>
+                    <input type="text" name="date" value="{{ today }}" placeholder="YYYY-MM-DD" required>
+                </div>
+                <div class="date-hint">📌 Format: YYYY-MM-DD (e.g., 2026-07-09)</div>
             </div>
             
             <div class="form-group">
-                <label>Time</label>
-                <input type="text" name="time" value="10:00" placeholder="HH:MM" required>
-                <div class="date-hint">Format: HH:MM (24-hour, e.g., 14:30)</div>
+                <label>🕐 Time</label>
+                <div class="input-group">
+                    <span class="icon">⏰</span>
+                    <input type="text" name="time" value="10:00" placeholder="HH:MM" required>
+                </div>
+                <div class="date-hint">📌 Format: HH:MM (24-hour, e.g., 14:30)</div>
             </div>
             
             <button type="submit" class="btn">✅ Book Appointment</button>
@@ -555,10 +1247,10 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.password == password:
             session['username'] = username
-            flash(f'Welcome back, {username}!', 'success')
+            flash(f'🎉 Welcome back, {username}!', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid username or password', 'error')
+            flash('❌ Invalid username or password', 'error')
             return render_template_string(LOGIN_PAGE)
     
     if 'username' in session:
@@ -593,7 +1285,7 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
         
-        flash(f'Account created! Please login, {username}', 'success')
+        flash(f'🎉 Account created! Please login, {username}', 'success')
         return redirect(url_for('login'))
     
     return render_template_string(SIGNUP_PAGE)
