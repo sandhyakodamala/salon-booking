@@ -1,7 +1,12 @@
----
+version: '3.8'
+
 services:
+  # Service 1: Web Application (Your custom image)
   web:
-    image: salon-web:latest 
+    image: salon-web:latest
+    build:
+      context: ./app
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     environment:
@@ -10,19 +15,29 @@ services:
       - db
     deploy:
       replicas: 2
+      restart_policy:
+        condition: on-failure
     networks:
       - salon-network
 
+  # Service 2: Database (Your custom image)
   db:
-    image: postgres:16-alpine
+    image: salon-db:latest
+    build:
+      context: ./db
+      dockerfile: Dockerfile
     environment:
       - POSTGRES_DB=salon_db
       - POSTGRES_USER=salon_user
       - POSTGRES_PASSWORD=salon_password
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     deploy:
       replicas: 1
+      restart_policy:
+        condition: on-failure
     networks:
       - salon-network
     healthcheck:
@@ -31,8 +46,12 @@ services:
       timeout: 5s
       retries: 5
 
+  # Service 3: Adminer (Your custom image)
   adminer:
-    image: adminer:latest
+    image: salon-adminer:latest
+    build:
+      context: ./adminer
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -41,8 +60,13 @@ services:
       - db
     deploy:
       replicas: 1
+      restart_policy:
+        condition: on-failure
     networks:
       - salon-network
+
+volumes:
+  postgres_data:
 
 networks:
   salon-network:
