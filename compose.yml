@@ -5,7 +5,7 @@ services:
   web:
     image: sandhyakodamala/salonbooking:app_img
     ports:
-      - "5001:5000"
+      - "4999:5000"
     environment:
       - DATABASE_URL=postgresql://salon_user:salon_password@db:5432/salon_db
     depends_on:
